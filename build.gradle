@@ -1,0 +1,47 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+group = 'de.sunpacks'
+version = project.mod_version
+base {
+    archivesName = 'sunpack-browser'
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.fabricmc.net/' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:intermediary:${project.minecraft_version}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+tasks.register('modZip', Zip) {
+    group = 'build'
+    description = 'Packages the built mod JAR into an installable ZIP.'
+    dependsOn tasks.named('remapJar')
+    archiveFileName = "sunpack-browser-${project.version}-mod.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from(tasks.named('remapJar')) { into 'mods' }
+}
